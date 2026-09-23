@@ -1,6 +1,6 @@
 # Weather Data Pipeline
 
-An end-to-end data engineering pipeline that pulls live weather for 10 cities worldwide from the Open-Meteo API, loads it into PostgreSQL, transforms it into clean analytical models with dbt, and serves it through an interactive Streamlit dashboard — all orchestrated by Apache Airflow.
+An end-to-end real-time data pipeline that pulls live weather for 10 cities worldwide from the Open-Meteo API, loads it into PostgreSQL, transforms it into clean analytical models with dbt, and serves it through an interactive Streamlit dashboard — all orchestrated by Apache Airflow.
 
 [![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
