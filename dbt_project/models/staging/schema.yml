@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: stg_weather_readings
+    description: One row per city per observed timestamp, typed out of the raw JSONB payload.
+    columns:
+      - name: raw_id
+        tests: [unique, not_null]
+      - name: city_name
+        tests: [not_null]
+      - name: observed_at
+        tests: [not_null]
+      - name: temperature_c
+        tests: [not_null]

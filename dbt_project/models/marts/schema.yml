@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: dim_cities
+    description: One row per tracked city.
+    columns:
+      - name: city_name
+        tests: [unique, not_null]
+
+  - name: fct_weather_readings
+    description: One row per city per observed timestamp, ready for the dashboard.
+    columns:
+      - name: raw_id
+        tests: [unique, not_null]
+      - name: city_name
+        tests: [not_null]
+        tests:
+          - relationships:
+              to: ref('dim_cities')
+              field: city_name
+      - name: observed_at
+        tests: [not_null]

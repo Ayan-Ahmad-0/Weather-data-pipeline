@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: weather_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ayan
+      POSTGRES_PASSWORD: ayan1234
+      POSTGRES_DB: wdatabase
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - weather_pg_data:/var/lib/postgresql/data
+      - ./src/sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ayan -d wdatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  airflow-init:
+    image: apache/airflow:2.10.3
+    depends_on: [airflow-db]
+    environment: &airflow-env
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__SECRET_KEY: "a_fixed_dev_secret_change_me"
+      PYTHONPATH: /opt/airflow
+      _PIP_ADDITIONAL_REQUIREMENTS: "requests psycopg2-binary dbt-postgres"
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - >-
+        airflow db migrate && airflow users create
+        --username airflow --password airflow --firstname Ayan
+        --lastname Ahmad --role Admin --email ayan@example.com
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./dbt_project:/opt/airflow/dbt_project
+      - ./src:/opt/airflow/src
+
+  airflow-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+
+  airflow-webserver:
+    image: apache/airflow:2.10.3
+    depends_on: [airflow-init]
+    environment:
+      <<: *airflow-env
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ayan
+      POSTGRES_PASSWORD: ayan1234
+      POSTGRES_DB: wdatabase
+      POSTGRES_PORT: 5432
+    ports: ["8085:8080"]
+    command: airflow webserver
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./dbt_project:/opt/airflow/dbt_project
+      - ./src:/opt/airflow/src
+
+  airflow-scheduler:
+    image: apache/airflow:2.10.3
+    depends_on: [airflow-init]
+    environment:
+      <<: *airflow-env
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ayan
+      POSTGRES_PASSWORD: ayan1234
+      POSTGRES_DB: wdatabase
+      POSTGRES_PORT: 5432
+    command: airflow scheduler
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./dbt_project:/opt/airflow/dbt_project
+      - ./src:/opt/airflow/src
+
+volumes:
+  weather_pg_data:

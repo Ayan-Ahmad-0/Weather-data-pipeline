@@ -1,0 +1,21 @@
+name: 'weather_pipeline'
+version: '1.0.0'
+config-version: 2
+
+profile: 'weather_pipeline'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  weather_pipeline:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
