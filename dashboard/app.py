@@ -7,8 +7,11 @@ import pydeck as pdk
 import streamlit as st
 st.set_page_config(page_title="Weather Pipeline", layout="wide", page_icon="⛅")
 
-st.title("⛅ Weather Pipeline")
-st.caption("Open-Meteo → Postgres → dbt → Streamlit · 10 cities · live + historical")
+st.title("⛅ Weather Data Pipeline")
+st.markdown(
+    "<div class='pipeline-intro'>From API to dashboard, fully automated. Weather data for 10 cities, extracted hourly, transformed with dbt, and orchestrated end-to-end with Apache Airflow.</div>",
+    unsafe_allow_html=True,
+)
 
 # ---------------------------------------------------------------------------
 # Styling — dark cards, accent color, tighter spacing than Streamlit defaults
@@ -36,6 +39,7 @@ st.markdown("""
     .city-card .name { color: #f0f2f6; font-size: 1.05rem; font-weight: 600; }
     .city-card .temp { color: #f0f2f6; font-size: 1.6rem; font-weight: 700; }
     .city-card .cond { color: #8b93a7; font-size: 0.85rem; }
+    .pipeline-intro { color: #aeb7c9; font-size: 1.1rem; line-height: 1.5; margin-top: -0.5rem; margin-bottom: 1.25rem; }
     h1, h2, h3 { color: #f0f2f6 !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -170,7 +174,7 @@ st.write("")
 map_col, cards_col = st.columns([2, 1])
 
 with map_col:
-    st.subheader("Current temperature by city")
+    st.subheader("Weather Map Overview")
 
     map_df = latest.copy()
     t_min, t_max = map_df["temperature_c"].min(), map_df["temperature_c"].max()
