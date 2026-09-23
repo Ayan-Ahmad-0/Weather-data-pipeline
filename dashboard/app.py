@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -6,10 +5,6 @@ import plotly.graph_objects as go
 import psycopg2
 import pydeck as pdk
 import streamlit as st
-from dotenv import load_dotenv
-
-load_dotenv()
-
 st.set_page_config(page_title="Weather Pipeline", layout="wide", page_icon="⛅")
 
 st.title("⛅ Weather Pipeline")
@@ -64,11 +59,11 @@ def describe_weather(code):
 
 def get_connection():
     return psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=os.getenv("POSTGRES_PORT", "5432"),
-        dbname=os.getenv("POSTGRES_DB"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD"),
+        host=st.secrets["postgres"]["host"],
+        port=st.secrets["postgres"]["port"],
+        dbname=st.secrets["postgres"]["dbname"],
+        user=st.secrets["postgres"]["user"],
+        password=st.secrets["postgres"]["password"],
         connect_timeout=5,
         options="-c lock_timeout=5000 -c statement_timeout=30000",
     )
@@ -231,21 +226,63 @@ with map_col:
     )
 
     if selected:
+        trend_data = history.copy()
+        trend_data["observed_at"] = pd.to_datetime(
+            trend_data["observed_at"], utc=True, errors="coerce"
+        )
+        trend_data["temperature_c"] = pd.to_numeric(
+            trend_data["temperature_c"], errors="coerce"
+        )
+        trend_data = trend_data.dropna(
+            subset=["city_name", "observed_at", "temperature_c"]
+        ).sort_values(["city_name", "observed_at"])
+
         fig = go.Figure()
         for city in selected:
-            city_hist = history[history["city_name"] == city]
+            city_hist = trend_data[trend_data["city_name"] == city]
+            if city_hist.empty:
+                continue
+
+            trend_x = []
+            trend_y = []
+            previous_time = None
+            for row in city_hist.itertuples(index=False):
+                if (
+                    previous_time is not None
+                    and row.observed_at - previous_time > pd.Timedelta(hours=3)
+                ):
+                    trend_x.append(None)
+                    trend_y.append(None)
+                trend_x.append(row.observed_at)
+                trend_y.append(row.temperature_c)
+                previous_time = row.observed_at
+
             fig.add_trace(go.Scatter(
-                x=city_hist["observed_at"], y=city_hist["temperature_c"],
-                mode="lines", name=city, line=dict(width=2),
+                x=trend_x, y=trend_y,
+                mode="lines+markers", name=city, line=dict(width=2),
+                marker=dict(size=5), connectgaps=False,
             ))
-        fig.update_layout(
-            template="plotly_dark", height=600,
-            paper_bgcolor="#0e1117", plot_bgcolor="#0e1117",
-            legend=dict(orientation="h", y=1.15),
-            xaxis_title="", yaxis_title="Temperature (°C)",
-            margin=dict(l=20, r=20, t=20, b=20),
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        if fig.data:
+            fig.update_layout(
+                template="plotly_dark", height=600,
+                paper_bgcolor="#0e1117", plot_bgcolor="#0e1117",
+                legend=dict(orientation="h", y=1.15),
+                xaxis_title="Observed at", yaxis_title="Temperature (°C)",
+                hovermode="x unified",
+                xaxis=dict(rangeslider=dict(visible=True), type="date"),
+                margin=dict(l=20, r=20, t=20, b=20),
+            )
+            st.plotly_chart(
+                fig,
+                use_container_width=True,
+                config={
+                    "displayModeBar": True,
+                    "displaylogo": False,
+                    "scrollZoom": True,
+                },
+            )
+        else:
+            st.info("No temperature history is available for the selected cities.")
 
 with cards_col:
     st.subheader("Conditions")

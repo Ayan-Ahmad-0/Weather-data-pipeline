@@ -27,6 +27,11 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__WEBSERVER__SECRET_KEY: "a_fixed_dev_secret_change_me"
       PYTHONPATH: /opt/airflow
+      SUPABASE_HOST: ${SUPABASE_HOST}
+      SUPABASE_USER: ${SUPABASE_USER}
+      SUPABASE_PASSWORD: ${SUPABASE_PASSWORD}
+      SUPABASE_DB: ${SUPABASE_DB}
+      SUPABASE_PORT: ${SUPABASE_PORT:-5432}
       _PIP_ADDITIONAL_REQUIREMENTS: "requests psycopg2-binary dbt-postgres"
     entrypoint: /bin/bash
     command:
@@ -52,11 +57,11 @@ services:
     depends_on: [airflow-init]
     environment:
       <<: *airflow-env
-      POSTGRES_HOST: postgres
-      POSTGRES_USER: ayan
-      POSTGRES_PASSWORD: ayan1234
-      POSTGRES_DB: wdatabase
-      POSTGRES_PORT: 5432
+      POSTGRES_HOST: ${SUPABASE_HOST}
+      POSTGRES_USER: ${SUPABASE_USER}
+      POSTGRES_PASSWORD: ${SUPABASE_PASSWORD}
+      POSTGRES_DB: ${SUPABASE_DB}
+      POSTGRES_PORT: ${SUPABASE_PORT:-5432}
     ports: ["8085:8080"]
     command: airflow webserver
     volumes:
@@ -69,11 +74,11 @@ services:
     depends_on: [airflow-init]
     environment:
       <<: *airflow-env
-      POSTGRES_HOST: postgres
-      POSTGRES_USER: ayan
-      POSTGRES_PASSWORD: ayan1234
-      POSTGRES_DB: wdatabase
-      POSTGRES_PORT: 5432
+      POSTGRES_HOST: ${SUPABASE_HOST}
+      POSTGRES_USER: ${SUPABASE_USER}
+      POSTGRES_PASSWORD: ${SUPABASE_PASSWORD}
+      POSTGRES_DB: ${SUPABASE_DB}
+      POSTGRES_PORT: ${SUPABASE_PORT:-5432}
     command: airflow scheduler
     volumes:
       - ./dags:/opt/airflow/dags
