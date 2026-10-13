@@ -12,7 +12,7 @@ From API to dashboard, fully automated. Weather data for 10 cities, extracted ho
 
 ---
 
-## 📋 Overview
+## Overview
 
 This pipeline automatically:
 
@@ -27,7 +27,7 @@ This mirrors how real data teams build monitoring pipelines for anything that ch
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 **Open-Meteo API** → **Extract (Python)** → **Supabase / PostgreSQL (raw)** → **dbt (staging/marts)** → **Streamlit Dashboard (hosted on Streamlit Community Cloud)**
 
@@ -55,7 +55,7 @@ This mirrors how real data teams build monitoring pipelines for anything that ch
 
 ---
 
-## 📊 Dashboard Output
+## Dashboard Output
 
 <!-- Drop dashboard screenshots into images/ -->
 ![Dashboard Overview](images/dashboard_1.png)
@@ -63,7 +63,7 @@ This mirrors how real data teams build monitoring pipelines for anything that ch
 
 ---
 
-## 🔄 Pipeline Flow (Airflow DAG)
+## Pipeline Flow (Airflow DAG)
 
 ```
 extract (poll Open-Meteo for 10 cities)
@@ -88,7 +88,7 @@ Each task carries its own retry policy and logs independently in the Airflow UI,
 
 ---
 
-## 🗂️ Database Tables (Supabase)
+## Database Tables (Supabase)
 
 | Table                    | Description                                                                              |
 |---------------------------|-------------------------------------------------------------------------------------------|
@@ -99,7 +99,7 @@ Each task carries its own retry policy and logs independently in the Airflow UI,
 
 ---
 
-## ✅ Data Validation & Reliability
+## Data Validation & Reliability
 
 - **Idempotent upserts** — `UNIQUE (city_name, observed_at)` with `ON CONFLICT DO NOTHING`, so reruns never duplicate rows
 - **Per-city retries** — one city's flaky API call doesn't cost the other nine that hour
@@ -111,7 +111,7 @@ Each task carries its own retry policy and logs independently in the Airflow UI,
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 weather-pipeline/
@@ -190,7 +190,7 @@ Airflow's own internal metadata database (`airflow-db` in Docker Compose) is **d
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ```
 # Clone the repo
@@ -219,7 +219,7 @@ streamlit run dashboard/app.py
 
 ---
 
-## 🚧 Challenges Solved
+## Challenges Solved
 
 - Migrated orchestration from Windows Task Scheduler (`schtasks` + a shell script) to Apache Airflow for real DAG-level dependency tracking, per-task retries, and run history — instead of a single script that either fully succeeds or fully fails with no visibility into which step broke
 - Migrated the database from local Postgres to **Supabase** after discovering Streamlit Community Cloud runs in an isolated container with no access to a developer's local machine — `localhost` there refers to Streamlit's own container, not the local PC
@@ -232,7 +232,7 @@ streamlit run dashboard/app.py
 
 ---
 
-## 🛠️ Future Improvements
+## Future Improvements
 
 - Dynamic per-city task mapping in Airflow, so one city's API failure retries in isolation instead of retrying the full extract batch
 - Add alerting hooks (Slack/email) on DAG task failure
